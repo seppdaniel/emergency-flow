@@ -3,7 +3,9 @@ import cors from '@fastify/cors';
 import { decisionRoutes } from './routes/decision';
 import { hospitalRoutes } from './routes/hospitals';
 import { historyRoutes } from './routes/history';
+import { metricsRoutes } from './routes/metrics';
 import { startSimulator } from './simulator';
+import { registerMetricsHook } from './hooks/metricsHook';
 
 const fastify = Fastify({
   logger: true,
@@ -14,9 +16,12 @@ async function start(): Promise<void> {
     origin: 'http://localhost:3000',
   });
 
+  registerMetricsHook(fastify);
+
   await fastify.register(decisionRoutes);
   await fastify.register(hospitalRoutes);
   await fastify.register(historyRoutes);
+  await fastify.register(metricsRoutes);
 
   await fastify.listen({
     host: '0.0.0.0',

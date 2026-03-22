@@ -3,6 +3,7 @@ import { EmergencyType, Hospital, HospitalBase } from '../../../lib/types';
 import { getHospitalSnapshot } from '../simulator';
 import { rankHospitals, EMERGENCY_WEIGHTS } from '../../../lib/decisionEngine';
 import { prisma } from '../db';
+import { recordDecision } from '../metrics';
 
 const VALID_EMERGENCY_TYPES: EmergencyType[] = [
   'heart_attack',
@@ -89,6 +90,12 @@ export async function decisionRoutes(fastify: FastifyInstance): Promise<void> {
           reasoning,
         },
       }).catch((err) => fastify.log.error('DB write failed:', err));
+
+      try {
+        recordDecision(emergencyType as string, ranked[0].score);
+      } catch (err) {
+        fastify.log.error({ err }, 'Metrics record failed');
+      }
 
       return reply.status(200).send({
         best: ranked[0],

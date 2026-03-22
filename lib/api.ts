@@ -1,4 +1,4 @@
-import type { DecisionResult, EmergencyType, HospitalBase, DecisionRecord } from './types';
+import type { DecisionResult, EmergencyType, HospitalBase, DecisionRecord, MetricsSnapshot } from './types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
 
@@ -48,4 +48,12 @@ export async function fetchHistory(limit = 10): Promise<DecisionRecord[]> {
     throw new Error(`API error: ${response.status}`);
   }
   return response.json() as Promise<DecisionRecord[]>;
+}
+
+export async function fetchMetrics(): Promise<MetricsSnapshot> {
+  const response = await fetch(`${API_URL}/api/metrics`);
+  if (!response.ok) {
+    throw new Error(`API error: ${response.status}`);
+  }
+  return response.json() as Promise<MetricsSnapshot>;
 }

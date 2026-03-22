@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { EmergencyType, Hospital, DecisionResult, HospitalBase, DecisionRecord } from '@/lib/types';
-import { fetchDecision, fetchHospitals, fetchDecisionWithData, fetchHistory } from '@/lib/api';
+import { EmergencyType, Hospital, DecisionResult, HospitalBase, DecisionRecord, MetricsSnapshot } from '@/lib/types';
+import { fetchDecision, fetchHospitals, fetchDecisionWithData, fetchHistory, fetchMetrics } from '@/lib/api';
 import MapWrapper from '@/app/components/MapWrapper';
+import MetricsPanel from '@/app/components/MetricsPanel';
 
 const EMERGENCY_OPTIONS: { value: EmergencyType; label: string }[] = [
   { value: 'heart_attack', label: 'Heart attack' },
@@ -43,6 +44,23 @@ export default function HomePage() {
   const [showHistory, setShowHistory] = useState(false);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [locationError, setLocationError] = useState<string | null>(null);
+  const [metrics, setMetrics] = useState<MetricsSnapshot | null>(null);
+  const [showMetrics, setShowMetrics] = useState(false);
+
+  useEffect(() => {
+    const pollMetrics = async () => {
+      try {
+        const data = await fetchMetrics();
+        setMetrics(data);
+      } catch {
+        // Silent metrics error
+      }
+    };
+
+    pollMetrics();
+    const interval = setInterval(pollMetrics, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     if (typeof navigator !== 'undefined' && navigator.geolocation) {
@@ -113,14 +131,30 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-gray-950 text-gray-100">
       <div className="mx-auto max-w-md px-4 py-8 sm:max-w-lg sm:px-6 lg:max-w-xl lg:px-8">
-        <header className="mb-8 text-center">
-          <h1 className="text-3xl font-bold text-emerald-400 sm:text-4xl">
-            Emergency Flow
-          </h1>
-          <p className="mt-2 text-sm text-gray-400 sm:text-base">
-            Real-time decision system
-          </p>
+        <header className="mb-4 flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-emerald-400 sm:text-4xl">
+              Emergency Flow
+            </h1>
+            <p className="mt-2 text-sm text-gray-400 sm:text-base">
+              Real-time decision system
+            </p>
+          </div>
+          {metrics !== null && (
+            <button
+              onClick={() => setShowMetrics(!showMetrics)}
+              className="text-xs text-gray-500 hover:text-emerald-400 border border-gray-700 hover:border-emerald-500 rounded px-2 py-1 transition-colors"
+            >
+              ⚡ Metrics
+            </button>
+          )}
         </header>
+
+        {showMetrics && metrics && (
+          <div className="mb-6">
+            <MetricsPanel metrics={metrics} />
+          </div>
+        )}
 
         <section className="mb-6 rounded-lg bg-gray-900 p-6 shadow-lg">
           <div className="mb-2 flex items-center justify-between">

@@ -51,3 +51,24 @@ export interface DecisionRecord {
   bestHospitalScore: number;
   reasoning: string;
 }
+
+export interface RouteMetricEntry {
+  count: number;
+  avgResponseMs: number;
+  errors: number;
+}
+
+export interface DecisionMetricEntry {
+  count: number;
+  avgScore: number;
+}
+
+export interface MetricsSnapshot {
+  uptime: number;
+  totalRequests: number;
+  totalErrors: number;
+  errorRate: string;
+  routes: Record<string, RouteMetricEntry>;
+  decisionsByType: Record<string, DecisionMetricEntry>;
+  collectedAt: string;
+}
